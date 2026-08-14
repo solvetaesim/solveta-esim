@@ -1,0 +1,81 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Section, Container, Eyebrow } from "@/components/ui/Section";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { Accordion } from "@/components/ui/Accordion";
+import { generalFaq } from "@/lib/data/faq";
+import { site } from "@/lib/site";
+import { Pin, QrGlyph, Bolt, Check } from "@/components/ui/icons";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqSchema } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "Help centre & support",
+  description: "Solveta help centre — installation guides, compatibility, refunds and 24/7 contact. Get answers fast.",
+  alternates: { canonical: "/help" },
+};
+
+const topics = [
+  { icon: <QrGlyph className="size-5" />, title: "Installation guides", body: "Step-by-step setup for iOS and Android.", href: "/how-it-works" },
+  { icon: <Check className="size-5" />, title: "Compatibility", body: "Check your phone supports eSIM in two taps.", href: "/compatibility" },
+  { icon: <Bolt className="size-5" />, title: "Top-ups", body: "Add more data to an active eSIM anytime.", href: "/account?tab=esims" },
+  { icon: <Pin className="size-5" />, title: "Coverage", body: "See supported countries and networks.", href: "/coverage" },
+];
+
+export default function HelpPage() {
+  const trail = [
+    { name: "Home", path: "/" },
+    { name: "Help", path: "/help" },
+  ];
+  return (
+    <>
+      <JsonLd data={faqSchema(generalFaq.map((f) => ({ q: f.q, a: typeof f.a === "string" ? f.a : "" })))} />
+      <Section band="canvas" contours grid>
+        <Container className="py-12 sm:py-16">
+          <Breadcrumbs trail={trail} />
+          <Eyebrow className="mt-6" coords="24/7 support">Help centre</Eyebrow>
+          <h1 className="mt-3 max-w-2xl text-balance font-display text-4xl text-ink sm:text-6xl">
+            We&apos;re with you, every time zone
+          </h1>
+          <p className="mt-4 max-w-xl text-pretty text-ink-muted">
+            Browse the essentials or reach a human any time — most issues are a quick settings fix.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {topics.map((t) => (
+              <Link key={t.title} href={t.href} className="group rounded-ticket border border-hairline bg-card p-5 shadow-ticket transition-transform hover:-translate-y-1">
+                <span className="inline-grid size-10 place-items-center rounded-full bg-coral-tint text-coral-strong">{t.icon}</span>
+                <h2 className="mt-3 font-display text-lg text-ink">{t.title}</h2>
+                <p className="mt-1 text-sm text-ink-muted">{t.body}</p>
+              </Link>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      <Section band="parchment" id="contact">
+        <Container className="py-14 sm:py-16">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-ticket border border-hairline bg-card px-6 shadow-ticket">
+              <Accordion items={generalFaq} />
+            </div>
+            <div>
+              <h2 className="font-display text-3xl text-ink">Still need a hand?</h2>
+              <p className="mt-2 text-pretty text-ink-muted">Our team replies within minutes, day or night.</p>
+              <a href={`mailto:${site.supportEmail}`} className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-coral px-6 font-medium text-white hover:bg-coral-strong">
+                <Pin className="size-4" /> Email support
+              </a>
+              <dl className="mt-8 space-y-4 text-sm">
+                <div id="about"><dt className="font-mono text-xs uppercase tracking-widest text-ink-muted">About</dt><dd className="mt-1 text-ink-muted">{site.name} is operated by {site.company}, connecting curious travellers in {site.countriesCovered} countries. Registered office: {site.address} · Reg. no. {site.regNumber}.</dd></div>
+                <div id="refunds"><dt className="font-mono text-xs uppercase tracking-widest text-ink-muted">Refunds</dt><dd className="mt-1 text-ink-muted">If we can&apos;t get you online and it&apos;s on us, you&apos;re covered by our refund policy.</dd></div>
+                <div id="privacy"><dt className="font-mono text-xs uppercase tracking-widest text-ink-muted">Privacy</dt><dd className="mt-1 text-ink-muted">We collect only what&apos;s needed to deliver your eSIM and never sell your data. The full privacy policy is available from {site.company}.</dd></div>
+                <div id="terms"><dt className="font-mono text-xs uppercase tracking-widest text-ink-muted">Terms</dt><dd className="mt-1 text-ink-muted">Using {site.name} means you accept our terms of service, including eSIM activation and fair-use conditions.</dd></div>
+                <div id="cookies"><dt className="font-mono text-xs uppercase tracking-widest text-ink-muted">Cookies</dt><dd className="mt-1 text-ink-muted">We use essential cookies to run the site plus optional ones you control via the cookie banner.</dd></div>
+              </dl>
+            </div>
+          </div>
+        </Container>
+      </Section>
+    </>
+  );
+}
