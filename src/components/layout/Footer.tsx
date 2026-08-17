@@ -98,7 +98,7 @@ export function Footer() {
       <div className="border-t border-hairline">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-5 py-5 text-xs text-ink-inverse/60 sm:px-8 md:flex-row md:items-center md:justify-between">
           <p>
-            © {new Date().getFullYear()} {site.company} · Reg. no. {site.regNumber} · {site.address}. {site.name} is a trading name. All rights reserved.
+            © {new Date().getFullYear()} {site.company} · Reg. no. {site.regNumber} · {site.address} · {site.supportEmail}. {site.name} is a trading name. All rights reserved.
           </p>
           <nav aria-label="Legal" className="flex flex-wrap gap-4">
             <FooterLink href="/help#privacy">Privacy</FooterLink>
