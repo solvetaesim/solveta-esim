@@ -1,4 +1,5 @@
 import "server-only";
+import nodemailer, { type Transporter } from "nodemailer";
 import { site } from "@/lib/site";
 
 interface Attachment {
@@ -14,15 +15,37 @@ interface Mail {
   attachments?: Attachment[];
 }
 
+let transporter: Transporter | null = null;
+
+/** Lazily builds a reusable SMTP transport from SMTP_* env vars. Returns null
+ *  when credentials are missing so sendMail can fall back to console logging. */
+function getTransporter(): Transporter | null {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+  if (!transporter) {
+    const port = Number(process.env.SMTP_PORT ?? 465);
+    transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+  }
+  return transporter;
+}
+
 /**
- * Sends transactional email via Resend when RESEND_API_KEY is set, otherwise
- * logs to the server console so local development works without a provider.
+ * Sends transactional email over SMTP when SMTP_HOST/USER/PASS are set,
+ * otherwise logs to the server console so local development works without a
+ * mail server.
  */
 export async function sendMail(mail: Mail): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM ?? "Solveta <onboarding@resend.dev>";
+  const tx = getTransporter();
+  const from = process.env.MAIL_FROM ?? `Solveta <${process.env.SMTP_USER ?? "info@solvetaesim.com"}>`;
 
-  if (!key) {
+  if (!tx) {
     const files = mail.attachments?.length
       ? `\n[mail:dev] Attachments: ${mail.attachments.map((a) => `${a.filename} (${a.content.byteLength} bytes)`).join(", ")}`
       : "";
@@ -30,27 +53,20 @@ export async function sendMail(mail: Mail): Promise<void> {
     return;
   }
 
-  const body: Record<string, unknown> = {
-    from,
-    to: mail.to,
-    subject: mail.subject,
-    html: mail.html,
-    text: mail.text,
-  };
-  if (mail.attachments?.length) {
-    body.attachments = mail.attachments.map((a) => ({
-      filename: a.filename,
-      content: Buffer.from(a.content).toString("base64"),
-    }));
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    console.error(`[mail] Resend failed (${res.status}): ${await res.text()}`);
+  try {
+    await tx.sendMail({
+      from,
+      to: mail.to,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      attachments: mail.attachments?.map((a) => ({
+        filename: a.filename,
+        content: Buffer.from(a.content),
+      })),
+    });
+  } catch (err) {
+    console.error("[mail] SMTP send failed:", err);
   }
 }
 
