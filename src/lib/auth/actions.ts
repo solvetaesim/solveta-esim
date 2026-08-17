@@ -9,6 +9,7 @@ import { createSession, destroySession, readSession } from "./session";
 import { getUserByEmail } from "./dal";
 import { registerSchema, loginSchema, forgotSchema, resetSchema } from "./schema";
 import { sendMail, welcomeEmail, welcomeBackEmail, resetEmail, topUpEmail } from "./mailer";
+import { generateTopUpPdf } from "./invoice";
 
 export interface FormState {
   ok?: boolean;
@@ -162,9 +163,19 @@ export async function topUpAction(_prev: FormState, data: FormData): Promise<For
   const row = rows[0];
   if (row) {
     try {
+      const newBalance = Number(row.balance_cents);
+      const ref = `TOP-${randomBytes(3).toString("hex").toUpperCase()}`;
+      const pdf = await generateTopUpPdf({
+        ref,
+        email: row.email as string,
+        amountCents: cents,
+        balanceCents: newBalance,
+        issuedAt: new Date(),
+      });
       await sendMail({
         to: row.email as string,
-        ...topUpEmail(row.first_name ?? undefined, cents, Number(row.balance_cents)),
+        ...topUpEmail(row.first_name ?? undefined, cents, newBalance),
+        attachments: [{ filename: `topup-${ref}.pdf`, content: pdf }],
       });
     } catch (err) {
       console.error("[topup] receipt email failed:", err);
