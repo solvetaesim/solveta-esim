@@ -17,6 +17,56 @@ export async function placeOrder(planId: string, email: string): Promise<OrderRe
   return result;
 }
 
+export interface WalletPayResult {
+  ok: boolean;
+  error?: string;
+  order?: OrderResult;
+}
+
+/**
+ * Charges a signed-in buyer's wallet balance for a plan and issues the eSIM.
+ * The debit is a conditional UPDATE so a race can never take the balance
+ * negative; if issuance fails afterwards the charge is refunded.
+ */
+export async function payWithBalance(planId: string): Promise<WalletPayResult> {
+  if (!planId) return { ok: false, error: "Missing plan." };
+  if (!hasDatabase()) return { ok: false, error: "Balance payments are unavailable right now." };
+
+  const session = await readSession();
+  if (!session) return { ok: false, error: "Please sign in to pay from your balance." };
+
+  const summary = resolvePlanSummary(planId);
+  if (!summary) return { ok: false, error: "We couldn't find that plan." };
+  const priceCents = Math.round(summary.price * 100);
+
+  await ensureSchema();
+  const rows = await sql()`SELECT email, balance_cents FROM users WHERE id = ${session.userId} LIMIT 1`;
+  if (!rows.length) return { ok: false, error: "Account not found." };
+  const email = rows[0].email as string;
+  if (Number(rows[0].balance_cents) < priceCents) {
+    return { ok: false, error: "Your balance is too low for this plan. Top up and try again." };
+  }
+
+  const debit = await sql()`
+    UPDATE users SET balance_cents = balance_cents - ${priceCents}
+    WHERE id = ${session.userId} AND balance_cents >= ${priceCents}
+    RETURNING id
+  `;
+  if (!debit.length) return { ok: false, error: "Your balance changed. Please try again." };
+
+  let order: OrderResult;
+  try {
+    order = await createOrder(planId, email);
+  } catch {
+    await sql()`UPDATE users SET balance_cents = balance_cents + ${priceCents} WHERE id = ${session.userId}`;
+    return { ok: false, error: "We couldn't issue the eSIM. Your balance was not charged." };
+  }
+
+  await persistOrder(planId, email, order);
+  await sendInvoice(planId, email, order);
+  return { ok: true, order };
+}
+
 /**
  * Emails the buyer a purchase confirmation with a branded PDF invoice attached.
  * Best-effort: a mail/PDF failure must not break delivery of an issued eSIM.

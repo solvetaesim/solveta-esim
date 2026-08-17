@@ -3,11 +3,12 @@ import { Section, Container, Eyebrow } from "@/components/ui/Section";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { DestinationsExplorer } from "@/components/destination/DestinationsExplorer";
 import { countries } from "@/lib/data/countries";
+import { site } from "@/lib/site";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "All destinations — travel eSIMs for 190+ countries",
+  title: `All destinations — travel eSIMs for ${site.countriesCovered} countries`,
   description: "Browse Solveta travel eSIMs by country and region. Instant QR delivery, no roaming fees, from $4 per plan.",
   alternates: { canonical: "/destinations" },
 };
@@ -28,7 +29,7 @@ export default function DestinationsPage() {
             Open the atlas. Pick where you&apos;re going.
           </h1>
           <p className="mt-4 max-w-xl text-pretty text-ink-muted">
-            {countries.length} popular destinations and counting — each delivered as an instant QR-code boarding pass.
+            {countries.length} destinations and counting — each delivered as an instant QR-code boarding pass.
           </p>
         </Container>
       </Section>

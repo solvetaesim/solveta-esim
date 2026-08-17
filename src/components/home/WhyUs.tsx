@@ -1,12 +1,13 @@
 import { Section, Container, Eyebrow } from "@/components/ui/Section";
 import { Check } from "@/components/ui/icons";
+import { site } from "@/lib/site";
 
 const rows = [
   { label: "Cost for 3 GB abroad", us: "from $6.90", roaming: "$45+ in overage" },
   { label: "Delivery", us: "Instant QR", roaming: "Buy a local SIM on arrival" },
   { label: "Setup", us: "~1 minute", roaming: "Store queue + passport" },
   { label: "Keep your number", us: "Yes, dual-SIM", roaming: "Swap card, lose it" },
-  { label: "Coverage", us: "190+ countries", roaming: "Per-country plans" },
+  { label: "Coverage", us: `${site.countriesCovered} countries`, roaming: "Per-country plans" },
   { label: "Top-ups", us: "In-app, anytime", roaming: "Back to the store" },
 ];
 

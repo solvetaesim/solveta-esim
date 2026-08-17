@@ -13,6 +13,11 @@ export function formatPrice(usd: number, currency: CurrencyCode = "USD"): string
   return `${SYMBOLS[currency]}${value.toFixed(2)}`;
 }
 
+/** Format a USD-base amount stored in cents into the selected currency. */
+export function formatCents(cents: number, currency: CurrencyCode = "USD"): string {
+  return formatPrice(cents / 100, currency);
+}
+
 export function currencySymbol(currency: CurrencyCode): string {
   return SYMBOLS[currency];
 }

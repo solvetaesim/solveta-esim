@@ -28,7 +28,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
   return (
     <Section band="canvas" contours grid>
       <Container className="py-12 sm:py-16">
-        <Eyebrow coords="your wallet">Account</Eyebrow>
+        <Eyebrow coords="your balance">Account</Eyebrow>
         <h1 className="mt-3 font-display text-4xl text-ink sm:text-5xl">Welcome back, {user.firstName}</h1>
         <p className="mt-2 max-w-xl text-ink-muted">Every eSIM you own, as a ticket — QR ready to scan, data at a glance, top-ups one tap away.</p>
         <div className="mt-10">

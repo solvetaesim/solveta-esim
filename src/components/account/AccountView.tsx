@@ -8,14 +8,13 @@ import { StampBadge } from "@/components/ui/StampBadge";
 import { QrCode } from "@/components/checkout/QrCode";
 import { topUpAction, logoutAction, type FormState } from "@/lib/auth/actions";
 import type { User, Transaction, EsimRecord } from "@/lib/auth/types";
+import { usePreferences } from "@/components/providers/Preferences";
 import { Bolt } from "@/components/ui/icons";
-import { cn } from "@/lib/utils";
+import { cn, formatCents } from "@/lib/utils";
 
 export type Tab = "esims" | "wallet" | "saved" | "profile";
 
-const savedSlugs = ["us", "ae", "kr"];
-
-const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const savedSlugs: string[] = [];
 
 export function AccountView({
   initialTab,
@@ -34,7 +33,7 @@ export function AccountView({
     <div>
       <div role="tablist" aria-label="Account sections" className="flex flex-wrap gap-2">
         <TabBtn active={tab === "esims"} onClick={() => setTab("esims")}>My eSIMs</TabBtn>
-        <TabBtn active={tab === "wallet"} onClick={() => setTab("wallet")}>Wallet</TabBtn>
+        <TabBtn active={tab === "wallet"} onClick={() => setTab("wallet")}>Balance</TabBtn>
         <TabBtn active={tab === "saved"} onClick={() => setTab("saved")}>Saved destinations</TabBtn>
         <TabBtn active={tab === "profile"} onClick={() => setTab("profile")}>Profile</TabBtn>
       </div>
@@ -78,12 +77,13 @@ export function AccountView({
 
 function WalletPanel({ user, transactions }: { user: User; transactions: Transaction[] }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(topUpAction, {});
+  const { currency } = usePreferences();
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <div className="rounded-ticket border border-hairline bg-card p-6 shadow-ticket">
         <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Current balance</p>
-        <p className="mt-1 font-display text-4xl text-ink">{money(user.balanceCents)}</p>
+        <p className="mt-1 font-display text-4xl text-ink">{formatCents(user.balanceCents, currency)}</p>
 
         <form action={formAction} className="mt-6 space-y-3">
           {state.message ? (
@@ -137,7 +137,7 @@ function WalletPanel({ user, transactions }: { user: User; transactions: Transac
                   <p className="font-mono text-xs text-ink-muted">{new Date(t.createdAt).toLocaleDateString()}</p>
                 </div>
                 <span className={cn("font-mono font-semibold", t.amountCents >= 0 ? "text-teal" : "text-coral-strong")}>
-                  {t.amountCents >= 0 ? "+" : "−"}{money(Math.abs(t.amountCents))}
+                  {t.amountCents >= 0 ? "+" : "−"}{formatCents(Math.abs(t.amountCents), currency)}
                 </span>
               </li>
             ))}
@@ -175,6 +175,7 @@ function ProfilePanel({ user }: { user: User }) {
 }
 
 function WalletTicket({ item }: { item: EsimRecord }) {
+  const { currency } = usePreferences();
   const country = item.countrySlug ? getCountry(item.countrySlug) : undefined;
   const topUpHref = country ? `/checkout?plan=${country.slug}-3-30` : "/destinations";
   const detailsHref = country ? `/destinations/${country.slug}` : "/destinations";
@@ -200,7 +201,7 @@ function WalletTicket({ item }: { item: EsimRecord }) {
           <dl className="flex-1 space-y-1 font-mono text-xs">
             <div className="flex justify-between"><dt className="text-ink-muted">Plan</dt><dd className="text-ink">{item.dataLabel}</dd></div>
             <div className="flex justify-between"><dt className="text-ink-muted">Validity</dt><dd className="text-ink">{item.days} days</dd></div>
-            <div className="flex justify-between"><dt className="text-ink-muted">Paid</dt><dd className="text-ink">{money(item.priceCents)}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-muted">Paid</dt><dd className="text-ink">{formatCents(item.priceCents, currency)}</dd></div>
           </dl>
         </div>
 

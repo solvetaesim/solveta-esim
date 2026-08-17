@@ -9,8 +9,9 @@ import { DestinationSearch } from "@/components/search/DestinationSearch";
 import { MegaNav } from "./MegaNav";
 import { MobileDrawer } from "./MobileDrawer";
 import { AccountButton } from "./AccountButton";
+import { usePreferences } from "@/components/providers/Preferences";
 import { nav } from "@/lib/site";
-import { cn } from "@/lib/utils";
+import { cn, formatCents } from "@/lib/utils";
 import { Cart, Heart, ChevronDown } from "@/components/ui/icons";
 
 export interface AccountSummary {
@@ -23,6 +24,7 @@ export function Header({ account }: { account: AccountSummary | null }) {
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
+  const { currency } = usePreferences();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -58,15 +60,15 @@ export function Header({ account }: { account: AccountSummary | null }) {
               <Link
                 href="/account?tab=wallet"
                 className="mr-1 hidden items-center gap-1.5 rounded-full border border-hairline bg-card px-3 py-1.5 font-mono text-xs text-ink transition-colors hover:border-ink/30 sm:inline-flex"
-                title="Wallet balance"
+                title="Balance"
               >
                 <span className="text-ink-muted">Balance</span>
-                <span className="font-semibold">${(account.balanceCents / 100).toFixed(2)}</span>
+                <span className="font-semibold">{formatCents(account.balanceCents, currency)}</span>
               </Link>
             ) : null}
             <AccountButton account={account} />
-            <IconLink href="/account?tab=saved" label="Saved destinations" icon={<Heart className="size-5" />} count={2} />
-            <IconLink href="/account?tab=esims" label="My eSIMs & cart" icon={<Cart className="size-5" />} count={1} />
+            <IconLink href="/account?tab=saved" label="Saved destinations" icon={<Heart className="size-5" />} />
+            <IconLink href="/account?tab=esims" label="My eSIMs" icon={<Cart className="size-5" />} />
             <button
               type="button"
               aria-label="Open menu"

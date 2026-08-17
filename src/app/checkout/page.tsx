@@ -3,6 +3,7 @@ import { Section, Container } from "@/components/ui/Section";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
 import { resolvePlanSummary, fallbackSummary } from "@/lib/data/summary";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { Pin } from "@/components/ui/icons";
 
 export const metadata: Metadata = {
@@ -16,6 +17,9 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
   const sp = await searchParams;
   const planId = typeof sp.plan === "string" ? sp.plan : undefined;
   const plan = resolvePlanSummary(planId) ?? fallbackSummary();
+
+  const user = await getCurrentUser();
+  const account = user ? { email: user.email, balanceCents: user.balanceCents } : null;
 
   return (
     <Section band="canvas" contours grid>
@@ -31,7 +35,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
         </div>
         <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">Almost there — one tap to takeoff</h1>
         <div className="mt-10">
-          <CheckoutFlow plan={plan} />
+          <CheckoutFlow plan={plan} account={account} />
         </div>
       </Container>
     </Section>

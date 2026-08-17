@@ -16,9 +16,9 @@ export function CurrencySelect() {
         onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
         className={selectCls}
       >
+        <option value="GBP">£ GBP</option>
         <option value="USD">$ USD</option>
         <option value="EUR">€ EUR</option>
-        <option value="GBP">£ GBP</option>
       </select>
     </label>
   );

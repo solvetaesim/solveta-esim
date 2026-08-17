@@ -4,6 +4,7 @@ import { DestinationCard } from "@/components/cards/DestinationCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { popularCountries } from "@/lib/data/countries";
+import { site } from "@/lib/site";
 import { ArrowRight } from "@/components/ui/icons";
 
 export function PopularDestinations() {
@@ -33,7 +34,7 @@ export function PopularDestinations() {
 
         <div className="mt-10 flex justify-center">
           <ButtonLink href="/destinations" variant="outline" size="lg">
-            Browse all {"190+"} destinations
+            Browse all {site.countriesCovered} destinations
           </ButtonLink>
         </div>
       </Container>

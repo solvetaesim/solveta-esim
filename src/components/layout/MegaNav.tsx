@@ -8,6 +8,7 @@ import { Price } from "@/components/ui/Price";
 import { Pin, ArrowRight } from "@/components/ui/icons";
 import { popularCountries } from "@/lib/data/countries";
 import { regions } from "@/lib/data/regions";
+import { site } from "@/lib/site";
 
 export function MegaNav({ onClose }: { onClose: () => void }) {
   const popular = popularCountries().slice(0, 8);
@@ -20,7 +21,7 @@ export function MegaNav({ onClose }: { onClose: () => void }) {
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.4fr_1fr_1fr]">
         {/* Popular */}
         <div>
-          <DestinationSearch className="mb-5" placeholder="Search 190+ destinations…" />
+          <DestinationSearch className="mb-5" placeholder={`Search ${site.countriesCovered} destinations…`} />
           <p className="mb-3 font-mono text-xs uppercase tracking-widest text-ink-muted">Popular destinations</p>
           <ul className="grid grid-cols-2 gap-2">
             {popular.map((c) => (

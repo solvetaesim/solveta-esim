@@ -72,6 +72,16 @@ export function welcomeBackEmail(firstName: string): Pick<Mail, "subject" | "htm
   return { subject, text, html: `<p>Hi ${firstName},</p><p>You just signed in to your Solveta account. If this was you, there's nothing to do — your eSIMs and wallet are ready in your account.</p><p>If this wasn't you, please reset your password right away.</p><p>The Solveta team</p>` };
 }
 
+export function topUpEmail(firstName: string | undefined, amountCents: number, balanceCents: number): Pick<Mail, "subject" | "html" | "text"> {
+  const amount = `$${(amountCents / 100).toFixed(2)}`;
+  const balance = `$${(balanceCents / 100).toFixed(2)}`;
+  const hi = firstName ? `Hi ${firstName},` : "Hi there,";
+  const subject = `Your Solveta top-up receipt — ${amount}`;
+  const text = `${hi}\n\nWe've added ${amount} to your Solveta balance.\n\nAmount added: ${amount}\nNew balance: ${balance}\n\nYou can spend it on any eSIM at checkout.\n\nSafe travels,\nThe Solveta team\n${site.company} · ${site.url}`;
+  const html = `<p>${hi}</p><p>We've added <strong>${amount}</strong> to your Solveta balance.</p><table style="border-collapse:collapse"><tr><td style="padding:2px 12px 2px 0;color:#697">Amount added</td><td>${amount}</td></tr><tr><td style="padding:2px 12px 2px 0;color:#697">New balance</td><td><strong>${balance}</strong></td></tr></table><p>You can spend it on any eSIM at checkout.</p><p>Safe travels,<br/>The Solveta team<br/><span style="color:#697">${site.company} · ${site.url}</span></p>`;
+  return { subject, text, html };
+}
+
 interface InvoiceEmailData {
   firstName?: string;
   orderRef: string;

@@ -31,7 +31,7 @@ function getInitialTheme(): Theme {
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [currency, setCurrency] = useState<CurrencyCode>("GBP");
 
   // Hydrate currency from storage on mount.
   useEffect(() => {

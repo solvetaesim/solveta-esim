@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { CurrencySelect } from "./PrefSelects";
 import { Bolt } from "@/components/ui/icons";
+import { site } from "@/lib/site";
 
 const MESSAGES = [
   "Instant QR delivery",
-  "Works in 190+ countries",
+  `Works in ${site.countriesCovered} countries`,
   "No roaming fees, ever",
   "24/7 human support",
 ];

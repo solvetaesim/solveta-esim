@@ -8,7 +8,7 @@ import { hashPassword, verifyPassword } from "./password";
 import { createSession, destroySession, readSession } from "./session";
 import { getUserByEmail } from "./dal";
 import { registerSchema, loginSchema, forgotSchema, resetSchema } from "./schema";
-import { sendMail, welcomeEmail, welcomeBackEmail, resetEmail } from "./mailer";
+import { sendMail, welcomeEmail, welcomeBackEmail, resetEmail, topUpEmail } from "./mailer";
 
 export interface FormState {
   ok?: boolean;
@@ -149,10 +149,26 @@ export async function topUpAction(_prev: FormState, data: FormData): Promise<For
   const cents = Math.round(amount * 100);
 
   await ensureSchema();
-  await sql()`UPDATE users SET balance_cents = balance_cents + ${cents} WHERE id = ${session.userId}`;
+  const rows = await sql()`
+    UPDATE users SET balance_cents = balance_cents + ${cents}
+    WHERE id = ${session.userId}
+    RETURNING email, first_name, balance_cents
+  `;
   await sql()`
     INSERT INTO transactions (user_id, kind, description, amount_cents)
     VALUES (${session.userId}, 'topup', ${"Wallet top-up"}, ${cents})
   `;
+
+  const row = rows[0];
+  if (row) {
+    try {
+      await sendMail({
+        to: row.email as string,
+        ...topUpEmail(row.first_name ?? undefined, cents, Number(row.balance_cents)),
+      });
+    } catch (err) {
+      console.error("[topup] receipt email failed:", err);
+    }
+  }
   return { ok: true, message: "Balance updated." };
 }

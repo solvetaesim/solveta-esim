@@ -4,30 +4,54 @@ import { useState } from "react";
 import Link from "next/link";
 import type { PlanSummary } from "@/lib/data/summary";
 import type { OrderResult } from "@/lib/api/client";
-import { placeOrder } from "@/app/checkout/actions";
+import { placeOrder, payWithBalance } from "@/app/checkout/actions";
 import { Price } from "@/components/ui/Price";
 import { PaymentMarks } from "@/components/ui/PaymentMarks";
 import { InstallSteps } from "@/components/how/InstallSteps";
+import { usePreferences } from "@/components/providers/Preferences";
 import { QrCode } from "./QrCode";
 import { Pin, Check, Bolt, ArrowRight } from "@/components/ui/icons";
 import { site } from "@/lib/site";
-import { cn } from "@/lib/utils";
+import { cn, formatCents } from "@/lib/utils";
 
 type Stage = "form" | "processing" | "done";
+type Method = "card" | "balance";
 
-export function CheckoutFlow({ plan }: { plan: PlanSummary }) {
+export interface CheckoutAccount {
+  email: string;
+  balanceCents: number;
+}
+
+export function CheckoutFlow({ plan, account }: { plan: PlanSummary; account?: CheckoutAccount | null }) {
+  const { currency } = usePreferences();
   const [stage, setStage] = useState<Stage>("form");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(account?.email ?? "");
   const [agreed, setAgreed] = useState(false);
   const [order, setOrder] = useState<OrderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const priceCents = Math.round(plan.price * 100);
+  const balanceCents = account?.balanceCents ?? 0;
+  const canPayFromBalance = !!account && balanceCents >= priceCents;
+  const [method, setMethod] = useState<Method>("card");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setStage("processing");
     try {
+      if (method === "balance") {
+        const res = await payWithBalance(plan.id);
+        if (res.ok && res.order) {
+          setOrder(res.order);
+          setStage("done");
+        } else {
+          setError(res.error ?? "We couldn't charge your balance. Please try again.");
+          setStage("form");
+        }
+        return;
+      }
       const result = await placeOrder(plan.id, email);
       setOrder(result);
       setStage("done");
@@ -38,44 +62,84 @@ export function CheckoutFlow({ plan }: { plan: PlanSummary }) {
   }
 
   if (stage === "done" && order) {
-    return <Delivery plan={plan} order={order} email={email} copied={copied} setCopied={setCopied} />;
+    const deliveredTo = method === "balance" ? account?.email ?? email : email;
+    return <Delivery plan={plan} order={order} email={deliveredTo} copied={copied} setCopied={setCopied} />;
   }
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
       {/* Form */}
       <form onSubmit={onSubmit} className="order-2 rounded-ticket border border-hairline bg-card p-6 shadow-ticket sm:p-8 lg:order-1">
-        <h2 className="font-display text-2xl text-ink">Guest checkout</h2>
-        <p className="mt-1 text-sm text-ink-muted">No account needed — your QR is delivered instantly and by email.</p>
+        <h2 className="font-display text-2xl text-ink">{account ? "Checkout" : "Guest checkout"}</h2>
+        <p className="mt-1 text-sm text-ink-muted">Your QR is delivered instantly and by email.</p>
 
-        <fieldset className="mt-6 space-y-4" disabled={stage === "processing"}>
-          <Field id="email" label="Email for delivery" hint="We send the QR code here.">
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none"
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="name" label="Cardholder name">
-              <input id="name" required placeholder="Alex Traveler" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
-            </Field>
-            <Field id="card" label="Card number">
-              <input id="card" required inputMode="numeric" placeholder="4242 4242 4242 4242" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
-            </Field>
-            <Field id="exp" label="Expiry">
-              <input id="exp" required placeholder="MM/YY" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
-            </Field>
-            <Field id="cvc" label="CVC">
-              <input id="cvc" required inputMode="numeric" placeholder="123" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
-            </Field>
+        {account ? (
+          <div className="mt-6" role="radiogroup" aria-label="Payment method">
+            <div className="grid grid-cols-2 gap-2">
+              <MethodTab active={method === "card"} onClick={() => setMethod("card")}>
+                Pay by card
+              </MethodTab>
+              <MethodTab
+                active={method === "balance"}
+                disabled={!canPayFromBalance}
+                onClick={() => canPayFromBalance && setMethod("balance")}
+              >
+                Balance · {formatCents(balanceCents, currency)}
+              </MethodTab>
+            </div>
+            {!canPayFromBalance ? (
+              <p className="mt-2 text-xs text-ink-muted">
+                Your balance is below this plan&apos;s price. Top up in your account to pay from balance.
+              </p>
+            ) : null}
           </div>
-        </fieldset>
+        ) : null}
+
+        {method === "balance" && account ? (
+          <fieldset className="mt-6 space-y-4" disabled={stage === "processing"}>
+            <div className="rounded-lg border border-hairline bg-canvas p-4">
+              <p className="text-sm text-ink-muted">Delivered to</p>
+              <p className="font-medium text-ink">{account.email}</p>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-parchment px-4 py-3 text-sm">
+              <span className="text-ink-muted">Paying from balance</span>
+              <span className="font-mono font-semibold text-ink">{formatCents(priceCents, currency)}</span>
+            </div>
+            <div className="flex items-center justify-between px-1 text-sm">
+              <span className="text-ink-muted">Balance after purchase</span>
+              <span className="font-mono text-ink">{formatCents(balanceCents - priceCents, currency)}</span>
+            </div>
+          </fieldset>
+        ) : (
+          <fieldset className="mt-6 space-y-4" disabled={stage === "processing"}>
+            <Field id="email" label="Email for delivery" hint="We send the QR code here.">
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none"
+              />
+            </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="name" label="Cardholder name">
+                <input id="name" required placeholder="Alex Traveler" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
+              </Field>
+              <Field id="card" label="Card number">
+                <input id="card" required inputMode="numeric" placeholder="4242 4242 4242 4242" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
+              </Field>
+              <Field id="exp" label="Expiry">
+                <input id="exp" required placeholder="MM/YY" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
+              </Field>
+              <Field id="cvc" label="CVC">
+                <input id="cvc" required inputMode="numeric" placeholder="123" className="h-12 w-full rounded-lg border border-hairline bg-canvas px-4 font-mono text-ink placeholder:text-ink-muted focus:border-coral focus:outline-none" />
+              </Field>
+            </div>
+          </fieldset>
+        )}
 
         {error ? <p className="mt-4 rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p> : null}
 
@@ -102,6 +166,10 @@ export function CheckoutFlow({ plan }: { plan: PlanSummary }) {
           {stage === "processing" ? (
             <>
               <span className="animate-pin-drop"><Pin className="size-5" /></span> Issuing your eSIM…
+            </>
+          ) : method === "balance" ? (
+            <>
+              Pay {formatCents(priceCents, currency)} from balance <ArrowRight className="size-4" />
             </>
           ) : (
             <>
@@ -230,6 +298,37 @@ function Delivery({
         </Link>
       </div>
     </div>
+  );
+}
+
+function MethodTab({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "flex h-12 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors",
+        active
+          ? "border-coral bg-coral/10 text-ink"
+          : "border-hairline bg-canvas text-ink-muted hover:border-ink/30",
+        disabled && "cursor-not-allowed opacity-50 hover:border-hairline",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
