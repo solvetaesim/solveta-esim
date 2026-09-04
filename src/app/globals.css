@@ -43,6 +43,12 @@
   --warning: #e8a33d;
   --danger: #c94f3d;
 
+  /* Pre-launch notice band. Fixed in both themes: the band is always a
+     light amber, so its text is always the dark navy — --ink would flip
+     to cream in dark mode and leave cream on amber. */
+  --notice: #e8a33d;
+  --notice-ink: #2b1f07;
+
   /* Map decoration */
   --contour: #e3dccb;       /* faint contour ink */
   --grid: #ebe5d6;          /* lat/long grid */
@@ -87,6 +93,9 @@
   --warning: #eab45f;
   --danger: #e0705d;
 
+  --notice: #d99a34;
+  --notice-ink: #2b1f07;
+
   --contour: #24344a;
   --grid: #1c2b40;
   --route: #3ba8b2;
@@ -125,6 +134,8 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-notice: var(--notice);
+  --color-notice-ink: var(--notice-ink);
 
   --color-contour: var(--contour);
   --color-grid: var(--grid);

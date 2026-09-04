@@ -153,8 +153,8 @@ export function CheckoutFlow({ plan, account }: { plan: PlanSummary; account?: C
           />
           <span>
             I read and agree to the{" "}
-            <Link href="/help#terms" className="text-coral underline-offset-2 hover:underline">terms and conditions</Link> and{" "}
-            <Link href="/help#privacy" className="text-coral underline-offset-2 hover:underline">privacy policy</Link>.
+            <Link href="/legal/terms" className="text-coral underline-offset-2 hover:underline">terms and conditions</Link> and{" "}
+            <Link href="/legal/privacy" className="text-coral underline-offset-2 hover:underline">privacy policy</Link>.
           </span>
         </label>
 

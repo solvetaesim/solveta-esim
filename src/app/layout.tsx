@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { PreferencesProvider } from "@/components/providers/Preferences";
+import { DevNotice } from "@/components/layout/DevNotice";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/layout/CookieConsent";
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <PreferencesProvider>
+          <DevNotice />
           <Header account={account} />
           <main className="flex-1">{children}</main>
           <Footer />

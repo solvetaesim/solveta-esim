@@ -84,8 +84,8 @@ export function RegisterForm() {
           />
           <span>
             I agree to the{" "}
-            <Link href="/help" className="text-coral-strong underline">Terms &amp; Conditions</Link> and{" "}
-            <Link href="/help" className="text-coral-strong underline">Privacy Policy</Link>.
+            <Link href="/legal/terms" className="text-coral-strong underline">Terms &amp; Conditions</Link> and{" "}
+            <Link href="/legal/privacy" className="text-coral-strong underline">Privacy Policy</Link>.
           </span>
         </label>
         <FieldError errors={e.terms} />

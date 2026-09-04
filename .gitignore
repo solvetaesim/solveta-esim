@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# working documents and account credentials. This repository is public —
+# nothing under addons/ belongs in it.
+/addons
+
 # vercel
 .vercel
 

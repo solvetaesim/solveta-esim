@@ -4,13 +4,31 @@ import { countries } from "@/lib/data/countries";
  *  never overstates the number of destinations actually on sale. */
 const countriesCovered = `${Math.floor(countries.length / 10) * 10}+`;
 
-/** Company registration details. Sourced from NEXT_PUBLIC_* env vars so the
- *  legal entity can be changed without touching code; falls back to the
- *  registered SOLVETA LTD details when unset. NEXT_PUBLIC_ prefix is required
- *  because site is imported by client components (Header, checkout, footer). */
-const company = process.env.NEXT_PUBLIC_COMPANY_NAME ?? "SOLVETA LTD";
-const regNumber = process.env.NEXT_PUBLIC_COMPANY_NUMBER ?? "17349586";
-const address = process.env.NEXT_PUBLIC_COMPANY_ADDRESS ?? "Dept 6953, 196 High Road, Wood Green, London, United Kingdom, N22 8HH";
+/** Legal entity.
+ *
+ *  No company is registered yet, so the site ships placeholders rather than a
+ *  name it is not entitled to trade under. The placeholders are deliberate and
+ *  visible: they appear in the footer, on the policy pages, in the checkout's
+ *  merchant line and on generated invoices, alongside the development notice
+ *  in the header.
+ *
+ *  To go live: register the entity, set NEXT_PUBLIC_COMPANY_NAME / _NUMBER /
+ *  _ADDRESS (locally in .env.local, on the host in its env settings), then set
+ *  COMPANY_REGISTERED to true. That one flag also removes the development
+ *  banner and the draft notice from the policy pages. Until it is true the env
+ *  values are ignored on purpose, so a stale host variable cannot put an
+ *  unregistered company name back on a public page.
+ *
+ *  NEXT_PUBLIC_ prefix is required because site is imported by client
+ *  components (Header, checkout, footer). */
+export const COMPANY_REGISTERED = false;
+
+const registered = (value: string | undefined, placeholder: string) =>
+  COMPANY_REGISTERED && value ? value : placeholder;
+
+const company = registered(process.env.NEXT_PUBLIC_COMPANY_NAME, "COMPANY NAME");
+const regNumber = registered(process.env.NEXT_PUBLIC_COMPANY_NUMBER, "COMPANY NUMBER");
+const address = registered(process.env.NEXT_PUBLIC_COMPANY_ADDRESS, "COMPANY ADDRESS");
 const supportEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL ?? "info@solvetaesim.com";
 
 export const site = {

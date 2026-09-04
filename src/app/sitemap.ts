@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { countries } from "@/lib/data/countries";
 import { regions } from "@/lib/data/regions";
+import { policies } from "@/lib/data/policies";
 import { site } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -14,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/compatibility",
     "/coverage",
     "/help",
+    "/legal",
   ];
 
   return [
@@ -34,6 +36,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "weekly" as const,
       priority: 0.6,
+    })),
+    ...policies.map((p) => ({
+      url: `${site.url}/legal/${p.slug}`,
+      lastModified: new Date(p.lastUpdated),
+      changeFrequency: "yearly" as const,
+      priority: 0.4,
     })),
   ];
 }

@@ -22,7 +22,7 @@ const columns = [
       { label: "Help centre", href: "/help" },
       { label: "Installation guides", href: "/how-it-works" },
       { label: "Compatibility check", href: "/compatibility" },
-      { label: "Refund policy", href: "/help#refunds" },
+      { label: "Refund policy", href: "/legal/refund-cancellation" },
       { label: "Contact us", href: "/help#contact" },
     ],
   },
@@ -101,10 +101,11 @@ export function Footer() {
             © {new Date().getFullYear()} {site.company} · Reg. no. {site.regNumber} · {site.address} · {site.supportEmail}. {site.name} is a trading name. All rights reserved.
           </p>
           <nav aria-label="Legal" className="flex flex-wrap gap-4">
-            <FooterLink href="/help#privacy">Privacy</FooterLink>
-            <FooterLink href="/help#terms">Terms</FooterLink>
-            <FooterLink href="/help#cookies">Cookies</FooterLink>
-            <FooterLink href="/help#refunds">Refund Policy</FooterLink>
+            <FooterLink href="/legal/privacy">Privacy</FooterLink>
+            <FooterLink href="/legal/terms">Terms</FooterLink>
+            <FooterLink href="/legal/cookies">Cookies</FooterLink>
+            <FooterLink href="/legal/refund-cancellation">Refund Policy</FooterLink>
+            <FooterLink href="/legal">All policies</FooterLink>
           </nav>
         </div>
       </div>
